@@ -15,6 +15,9 @@ a.train$Pclass <- as.factor(a.train$Pclass)
 
 summary(a.train)
 
+a.train <- predict(preProcess(a.train, method = "bagImpute"), a.train)
+
+
 ###################################################################################################################
 ## Model fitting ##
 
@@ -22,7 +25,6 @@ set.seed(7)
 bayesglm_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
                  data = a.train,
                  method = "bayesglm",
-                 preProcess = "bagImpute",
                  na.action = na.pass,
                  trControl = trainControl(method = "cv", number = 10),
                  metric = "Kappa")
@@ -33,7 +35,6 @@ set.seed(7)
 gbm_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
                  data = a.train,
                  method = "gbm",
-                 preProcess = "bagImpute",
                  na.action = na.pass,
                  trControl = trainControl(method = "cv", number = 10),
                  metric = "Kappa")
@@ -44,7 +45,6 @@ set.seed(7)
 knn_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
                  data = a.train,
                  method = "knn",
-                 preProcess = "bagImpute",
                  na.action = na.pass,
                  trControl = trainControl(method = "cv", number = 10),
                  metric = "Kappa")
@@ -55,7 +55,6 @@ set.seed(7)
 nb_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
                 data = a.train,
                 method = "naive_bayes",
-                preProcess = "bagImpute",
                 na.action = na.pass,
                 trControl = trainControl(method = "cv", number = 10),
                 metric = "Kappa")
@@ -66,7 +65,6 @@ set.seed(7)
 nnet_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
                   data = a.train,
                   method = "nnet",
-                  preProcess = "bagImpute",
                   na.action = na.pass,
                   trControl = trainControl(method = "cv", number = 10),
                   metric = "Kappa")
@@ -77,7 +75,6 @@ set.seed(7)
 svm_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
                  data = a.train,
                  method = "svmLinear",
-                 preProcess = "bagImpute",
                  na.action = na.pass,
                  trControl = trainControl(method = "cv", number = 10),
                  probability = TRUE,
@@ -96,12 +93,12 @@ a.train$nnet_fit <- predict(nnet_fit, newdata = a.train, type = "prob")[,2]
 a.train$svm_fit <- predict(svm_fit, newdata = a.train, type = "prob")[,2]
 
 
-a.train$bayesglm_fit_factor <- factor(if_else(a.train$bayesglm_fit > .5 , TRUE,FALSE))
-a.train$gbm_fit_factor <- factor(if_else(a.train$gbm_fit > .5 , TRUE,FALSE))
-a.train$knn_fit_factor <- factor(if_else(a.train$knn_fit > .5 , TRUE,FALSE))
-a.train$nb_fit_factor <- factor(if_else(a.train$nb_fit > .5 , TRUE,FALSE))
-a.train$nnet_fit_factor <- factor(if_else(a.train$nnet_fit > .5 , TRUE,FALSE))
-a.train$svm_fit_factor <- factor(if_else(a.train$svm_fit > .5 , TRUE,FALSE))
+a.train$bayesglm_fit_factor <- factor(if_else(a.train$bayesglm_fit > .5 , "1", "0"))
+a.train$gbm_fit_factor <- factor(if_else(a.train$gbm_fit > .5 , "1", "0"))
+a.train$knn_fit_factor <- factor(if_else(a.train$knn_fit > .5 , "1", "0"))
+a.train$nb_fit_factor <- factor(if_else(a.train$nb_fit > .5 , "1", "0"))
+a.train$nnet_fit_factor <- factor(if_else(a.train$nnet_fit > .5 , "1", "0"))
+a.train$svm_fit_factor <- factor(if_else(a.train$svm_fit > .5 , "1", "0"))
 
 View(head(a.train))
 
