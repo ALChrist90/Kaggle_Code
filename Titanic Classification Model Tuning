@@ -159,6 +159,26 @@ invisible(plot(roc(Survived ~ nb_fit,
                    data = a.train),
                col = "grey",
                add = TRUE))
+               
+###################################################################################################################
+## Score Test Data ##
+
+nrow(a.test)
+
+str(a.test)
+
+a.test$Pclass <- as.factor(a.test$Pclass)
+
+a.test <- predict(preProcess(a.test, method = "bagImpute"), a.test)
+
+a.test$gbm_fit <- predict(gbm_fit, newdata = a.test, type = "prob")[,2]
+a.test$Survived <- factor(if_else(a.test$gbm_fit > .5 , "1", "0"))
+
+summary(a.test)
+
+a.test %>%
+    dplyr::select(PassengerId,Survived) -> final
+               
 
 invisible(plot(roc(Survived ~ nnet_fit, 
                    data = a.train),
