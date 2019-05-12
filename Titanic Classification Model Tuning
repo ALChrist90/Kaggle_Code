@@ -178,14 +178,3 @@ summary(a.test)
 
 a.test %>%
     dplyr::select(PassengerId,Survived) -> final
-               
-
-invisible(plot(roc(Survived ~ nnet_fit, 
-                   data = a.train),
-               col = "grey",
-               add = TRUE))
-
-invisible(plot(roc(Survived ~ svm_fit, 
-                   data = a.train),
-               col = "grey",
-add = TRUE))
