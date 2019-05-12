@@ -74,7 +74,7 @@ nnet_fit
 set.seed(7)
 svm_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
                  data = a.train,
-                 method = "svmLinear",
+                 method = "svmLinear2",
                  na.action = na.pass,
                  trControl = trainControl(method = "cv", number = 10),
                  probability = TRUE,
@@ -100,7 +100,7 @@ a.train$nb_fit_factor <- factor(if_else(a.train$nb_fit > .5 , "1", "0"))
 a.train$nnet_fit_factor <- factor(if_else(a.train$nnet_fit > .5 , "1", "0"))
 a.train$svm_fit_factor <- factor(if_else(a.train$svm_fit > .5 , "1", "0"))
 
-View(head(a.train))
+head(a.train)
 
 a.train %>%
   mutate(bayesglm = bayesglm_fit, gbm = gbm_fit,
@@ -114,17 +114,17 @@ a.train %>%
 
 prop.table(table(a.train$Survived))
 
-a.train$Survived_factor_TRUE <- TRUE
-a.train$Survived_factor_FALSE <- FALSE
-confusionMatrix(factor(a.train$Survived_factor_TRUE), factor(a.train$Survived),positive = "TRUE")
-confusionMatrix(factor(a.train$Survived_factor_FALSE), factor(a.train$Survived),positive = "TRUE")
+a.train$Survived_factor_TRUE <- "1"
+a.train$Survived_factor_FALSE <- "0"
+confusionMatrix(factor(a.train$Survived_factor_TRUE), factor(a.train$Survived),positive = "1")
+confusionMatrix(factor(a.train$Survived_factor_FALSE), factor(a.train$Survived),positive = "1")
 
-confusionMatrix(a.train$bayesglm_fit_factor, factor(a.train$Survived),positive = "TRUE")
-confusionMatrix(a.train$gbm_fit_factor, factor(a.train$Survived),positive = "TRUE")
-confusionMatrix(a.train$knn_fit_factor, factor(a.train$Survived),positive = "TRUE")
-confusionMatrix(a.train$nb_fit_factor, factor(a.train$Survived),positive = "TRUE")
-confusionMatrix(a.train$nnet_fit_factor, factor(a.train$Survived),positive = "TRUE")
-confusionMatrix(a.train$svm_fit_factor, factor(a.train$Survived),positive = "TRUE")
+confusionMatrix(a.train$bayesglm_fit_factor, factor(a.train$Survived),positive = "1")
+confusionMatrix(a.train$gbm_fit_factor, factor(a.train$Survived),positive = "1")
+confusionMatrix(a.train$knn_fit_factor, factor(a.train$Survived),positive = "1")
+confusionMatrix(a.train$nb_fit_factor, factor(a.train$Survived),positive = "1")
+confusionMatrix(a.train$nnet_fit_factor, factor(a.train$Survived),positive = "1")
+confusionMatrix(a.train$svm_fit_factor, factor(a.train$Survived),positive = "1")
 
 roc(Survived ~ bayesglm_fit, data = a.train , plot = FALSE)
 roc(Survived ~ gbm_fit, data = a.train , plot = FALSE)
