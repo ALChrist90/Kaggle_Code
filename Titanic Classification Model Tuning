@@ -1,0 +1,174 @@
+library(dplyr);library(ggplot2);library(caret);library(arm);library(MASS);library(pROC)
+###################################################################################################################
+# Data pulling and cleaning #
+
+#https://www.kaggle.com/c/titanic/data
+a.train <- read.csv("../input/train.csv")
+a.test <- read.csv("../input/test.csv")
+
+nrow(a.train)
+
+str(a.train)
+
+a.train$Survived <- as.factor(a.train$Survived)
+a.train$Pclass <- as.factor(a.train$Pclass)
+
+summary(a.train)
+
+###################################################################################################################
+## Model fitting ##
+
+set.seed(7)
+bayesglm_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+                 data = a.train,
+                 method = "bayesglm",
+                 preProcess = "bagImpute",
+                 na.action = na.pass,
+                 trControl = trainControl(method = "cv", number = 10),
+                 metric = "Kappa")
+
+bayesglm_fit
+
+set.seed(7)
+gbm_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+                 data = a.train,
+                 method = "gbm",
+                 preProcess = "bagImpute",
+                 na.action = na.pass,
+                 trControl = trainControl(method = "cv", number = 10),
+                 metric = "Kappa")
+
+gbm_fit
+
+set.seed(7)
+knn_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+                 data = a.train,
+                 method = "knn",
+                 preProcess = "bagImpute",
+                 na.action = na.pass,
+                 trControl = trainControl(method = "cv", number = 10),
+                 metric = "Kappa")
+
+knn_fit
+
+set.seed(7)
+nb_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+                data = a.train,
+                method = "naive_bayes",
+                preProcess = "bagImpute",
+                na.action = na.pass,
+                trControl = trainControl(method = "cv", number = 10),
+                metric = "Kappa")
+
+nb_fit
+
+set.seed(7)
+nnet_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+                  data = a.train,
+                  method = "nnet",
+                  preProcess = "bagImpute",
+                  na.action = na.pass,
+                  trControl = trainControl(method = "cv", number = 10),
+                  metric = "Kappa")
+
+nnet_fit
+
+set.seed(7)
+svm_fit <- train(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+                 data = a.train,
+                 method = "svmLinear",
+                 preProcess = "bagImpute",
+                 na.action = na.pass,
+                 trControl = trainControl(method = "cv", number = 10),
+                 probability = TRUE,
+                 metric = "Kappa")
+
+svm_fit
+
+###################################################################################################################
+## Model Evaluation ##
+
+a.train$bayesglm_fit <- predict(bayesglm_fit, newdata = a.train, type = "prob")[,2]
+a.train$gbm_fit <- predict(gbm_fit, newdata = a.train, type = "prob")[,2]
+a.train$knn_fit <- predict(knn_fit, newdata = a.train, type = "prob")[,2]
+a.train$nb_fit <- predict(nb_fit, newdata = a.train, type = "prob")[,2]
+a.train$nnet_fit <- predict(nnet_fit, newdata = a.train, type = "prob")[,2]
+a.train$svm_fit <- predict(svm_fit, newdata = a.train, type = "prob")[,2]
+
+
+a.train$bayesglm_fit_factor <- factor(if_else(a.train$bayesglm_fit > .5 , TRUE,FALSE))
+a.train$gbm_fit_factor <- factor(if_else(a.train$gbm_fit > .5 , TRUE,FALSE))
+a.train$knn_fit_factor <- factor(if_else(a.train$knn_fit > .5 , TRUE,FALSE))
+a.train$nb_fit_factor <- factor(if_else(a.train$nb_fit > .5 , TRUE,FALSE))
+a.train$nnet_fit_factor <- factor(if_else(a.train$nnet_fit > .5 , TRUE,FALSE))
+a.train$svm_fit_factor <- factor(if_else(a.train$svm_fit > .5 , TRUE,FALSE))
+
+View(head(a.train))
+
+a.train %>%
+  mutate(bayesglm = bayesglm_fit, gbm = gbm_fit,
+         knn = knn_fit, nb = nb_fit, 
+         nnet = nnet_fit, svm = svm_fit) %>%
+  dplyr::select(bayesglm, gbm, knn, nb, nnet, svm) %>%
+  tidyr::gather(model, prediction) %>%
+  mutate(model = factor(model, levels = c("bayesglm","gbm","knn","nb","nnet", "svm"))) %>%
+  ggplot(aes(prediction, col = model)) +
+  geom_density()
+
+prop.table(table(a.train$Survived))
+
+a.train$Survived_factor_TRUE <- TRUE
+a.train$Survived_factor_FALSE <- FALSE
+confusionMatrix(factor(a.train$Survived_factor_TRUE), factor(a.train$Survived),positive = "TRUE")
+confusionMatrix(factor(a.train$Survived_factor_FALSE), factor(a.train$Survived),positive = "TRUE")
+
+confusionMatrix(a.train$bayesglm_fit_factor, factor(a.train$Survived),positive = "TRUE")
+confusionMatrix(a.train$gbm_fit_factor, factor(a.train$Survived),positive = "TRUE")
+confusionMatrix(a.train$knn_fit_factor, factor(a.train$Survived),positive = "TRUE")
+confusionMatrix(a.train$nb_fit_factor, factor(a.train$Survived),positive = "TRUE")
+confusionMatrix(a.train$nnet_fit_factor, factor(a.train$Survived),positive = "TRUE")
+confusionMatrix(a.train$svm_fit_factor, factor(a.train$Survived),positive = "TRUE")
+
+roc(Survived ~ bayesglm_fit, data = a.train , plot = FALSE)
+roc(Survived ~ gbm_fit, data = a.train , plot = FALSE)
+roc(Survived ~ knn_fit, data = a.train , plot = FALSE)
+roc(Survived ~ nb_fit, data = a.train , plot = FALSE)
+roc(Survived ~ nnet_fit, data = a.train , plot = FALSE)
+roc(Survived ~ svm_fit, data = a.train , plot = FALSE)
+
+roc(Survived ~ gbm_fit, 
+    data = a.train, 
+    print.thres = c(.4, .6, .8), 
+    col = "red", 
+    print.auc = TRUE, 
+    plot = TRUE)
+
+invisible(plot(roc(Survived ~ gbm_fit, 
+                   data = a.train),
+               print.auc = TRUE,
+               col = "red"))
+
+invisible(plot(roc(Survived ~ bayesglm_fit, 
+                   data = a.train),
+               col = "grey",
+               add = TRUE))
+
+invisible(plot(roc(Survived ~ knn_fit, 
+                   data = a.train),
+               col = "grey",
+               add = TRUE))
+
+invisible(plot(roc(Survived ~ nb_fit, 
+                   data = a.train),
+               col = "grey",
+               add = TRUE))
+
+invisible(plot(roc(Survived ~ nnet_fit, 
+                   data = a.train),
+               col = "grey",
+               add = TRUE))
+
+invisible(plot(roc(Survived ~ svm_fit, 
+                   data = a.train),
+               col = "grey",
+add = TRUE))
