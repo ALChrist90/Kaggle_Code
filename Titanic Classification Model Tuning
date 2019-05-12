@@ -178,3 +178,5 @@ summary(a.test)
 
 a.test %>%
     dplyr::select(PassengerId,Survived) -> final
+
+head(final)
